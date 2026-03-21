@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: IP Geo API
+  description: IP geolocation lookup REST API
+  version: 1.0.0
+servers:
+  - url: http://localhost:4500
+paths:
+  /api/v1/lookup/{ip}:
+    get:
+      summary: Look up geolocation for a single IP
+      parameters:
+        - name: ip
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "8.8.8.8"
+      responses:
+        "200":
+          description: Geolocation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoResult"
+        "400":
+          description: Invalid or failed lookup
+  /api/v1/me:
+    get:
+      summary: Look up geolocation for the requester's IP
+      responses:
+        "200":
+          description: Geolocation result with clientIp
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - properties:
+                      clientIp:
+                        type: string
+                  - $ref: "#/components/schemas/GeoResult"
+  /api/v1/batch:
+    post:
+      summary: Batch lookup (max 100 IPs)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ips:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 100
+              required: [ips]
+      responses:
+        "200":
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GeoResult"
+  /api/v1/validate/{ip}:
+    get:
+      summary: Validate IP format (v4/v6)
+      parameters:
+        - name: ip
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ip:
+                    type: string
+                  valid:
+                    type: boolean
+                  version:
+                    type: integer
+                    nullable: true
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    GeoResult:
+      type: object
+      properties:
+        ip:
+          type: string
+        country:
+          type: string
+        countryCode:
+          type: string
+        region:
+          type: string
+        regionCode:
+          type: string
+        city:
+          type: string
+        zip:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        timezone:
+          type: string
+        isp:
+          type: string
+        org:
+          type: string
+        as:
+          type: string
